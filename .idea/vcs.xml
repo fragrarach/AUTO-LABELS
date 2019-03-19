@@ -2,7 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../AUTO-FOLDERS" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../DAILY-ORDERS" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../ORDER-ALERTS" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../SIGM-LOGGING" vcs="Git" />
   </component>
 </project>
