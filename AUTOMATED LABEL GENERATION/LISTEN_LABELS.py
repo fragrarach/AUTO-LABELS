@@ -1,5 +1,6 @@
 import psycopg2.extensions
 import re
+import os
 from win32com.client import Dispatch
 from shutil import copyfile
 
@@ -7,14 +8,36 @@ from shutil import copyfile
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
-conn_sigm = psycopg2.connect("host='192.168.0.250' dbname='QuatroAir' user='SIGM' port='5493'")
-conn_sigm.set_client_encoding('latin1')
-conn_sigm.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
-sigm_listen = conn_sigm.cursor()
-sigm_listen.execute('LISTEN labels;')
-sigm_query = conn_sigm.cursor()
+# Check whether app should reference dev or prod server/db
+def dev_check():
+    raw_filename = os.path.basename(__file__)
+    removed_extension = raw_filename.split('.')[0]
+    last_word = removed_extension.split('_')[-1]
+    if last_word == 'DEV':
+        return True
+    else:
+        return False
 
+
+# Initialize production DB connection, listen cursor and query cursor
+def sigm_conn():
+    global conn_sigm, sigm_query
+    if dev_check():
+        conn_sigm = psycopg2.connect("host='192.168.0.57' dbname='DEV' user='SIGM' port='5493'")
+    else:
+        conn_sigm = psycopg2.connect("host='192.168.0.250' dbname='QuatroAir' user='SIGM' port='5493'")
+    conn_sigm.set_client_encoding("latin1")
+    conn_sigm.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+
+    sigm_listen = conn_sigm.cursor()
+    sigm_listen.execute("LISTEN alert;")
+    sigm_query = conn_sigm.cursor()
+
+    return conn_sigm, sigm_query
+
+
+# Dymo COM configs
 labelCom = Dispatch('Dymo.DymoAddIn')
 labelText = Dispatch('Dymo.DymoLabels')
 
@@ -395,27 +418,39 @@ def payload_handler(payload):
 
 # TODO : Catch connection error during DB service downtime
 def main():
+    global conn_sigm, sigm_query
+    conn_sigm, sigm_query = sigm_conn()
     while 1:
-        conn_sigm.poll()
-        conn_sigm.commit()
-        while conn_sigm.notifies:
-            notify = conn_sigm.notifies.pop()
-            raw_payload = notify.payload
+        try:
+            conn_sigm.poll()
+        except:
+            print('Database cannot be accessed, PostgreSQL service probably rebooting')
+            try:
+                conn_sigm.close()
+                conn_sigm, sigm_query = sigm_conn()
 
-            db_ref, db_ref_type, label_ref, qty_ref, station = payload_handler(raw_payload)
+            except:
+                pass
+        else:
+            conn_sigm.commit()
+            while conn_sigm.notifies:
+                notify = conn_sigm.notifies.pop()
+                raw_payload = notify.payload
 
-            get_dymo_printers()
-            printer = select_printer(label_ref, station)
+                db_ref, db_ref_type, label_ref, qty_ref, station = payload_handler(raw_payload)
 
-            if db_ref_type == 'plq_id':
-                qty = select_print_qty(qty_ref, db_ref_type, db_ref)
-                label_text_handler(db_ref_type, db_ref, label_ref, printer, qty)
-            elif db_ref_type == 'ord_no':
-                ord_no = db_ref
-                orl_ids = ord_no_orl_id(ord_no)
-                for orl_id in orl_ids:
-                    qty = select_print_qty(qty_ref, 'orl_id', orl_id)
-                    label_text_handler('orl_id', orl_id, label_ref, printer, qty)
+                get_dymo_printers()
+                printer = select_printer(label_ref, station)
+
+                if db_ref_type == 'plq_id':
+                    qty = select_print_qty(qty_ref, db_ref_type, db_ref)
+                    label_text_handler(db_ref_type, db_ref, label_ref, printer, qty)
+                elif db_ref_type == 'ord_no':
+                    ord_no = db_ref
+                    orl_ids = ord_no_orl_id(ord_no)
+                    for orl_id in orl_ids:
+                        qty = select_print_qty(qty_ref, 'orl_id', orl_id)
+                        label_text_handler('orl_id', orl_id, label_ref, printer, qty)
 
 
 main()
