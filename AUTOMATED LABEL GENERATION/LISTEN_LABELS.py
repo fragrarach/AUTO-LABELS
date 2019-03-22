@@ -31,7 +31,7 @@ def sigm_conn():
     conn_sigm.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
     sigm_listen = conn_sigm.cursor()
-    sigm_listen.execute("LISTEN alert;")
+    sigm_listen.execute("LISTEN labels;")
     sigm_query = conn_sigm.cursor()
 
     return conn_sigm, sigm_query
@@ -296,7 +296,6 @@ def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
     label = select_label(label_ref)
     copy_label_template(label)
 
-    pairs = []
     if db_ref_type == 'plq_id':
         # PLETI Report
         plq_id = db_ref
@@ -305,6 +304,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
         serial_no_list = serial_no_range(plq_id)
 
         if label_ref == 'CONTROL PANEL':
+            pairs = []
             prt_no_pair = ['<Text></Text>', f'<Text>{prt_no}</Text>']
             pairs.append(prt_no_pair)
 
@@ -312,6 +312,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
 
         elif label_ref == 'UNIT':
             for serial_no in serial_no_list:
+                pairs = []
                 serial_no = str(serial_no)
                 serial_no_pair = ['<Text>1</Text>', f'<Text>{serial_no}</Text>']
                 pairs.append(serial_no_pair)
@@ -322,6 +323,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
 
         elif label_ref == 'SERIAL NUMBER':
             for serial_no in serial_no_list:
+                pairs = []
                 serial_no = str(serial_no)
                 serial_no_pair = ['<Text></Text>', f'<Text>{serial_no}</Text>']
                 pairs.append(serial_no_pair)
@@ -330,6 +332,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
 
         elif label_ref == 'SHIPPING SERIAL NUMBER':
             for serial_no in serial_no_list:
+                pairs = []
                 serial_no = str(serial_no)
                 prt_no_barcode_pair = ['<Text>3</Text>', f'<Text>{prt_no}</Text>']
                 pairs.append(prt_no_barcode_pair)
@@ -353,6 +356,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
         prt_no = orl_id_prt_no(orl_id)
         prt_desc = orl_id_prt_desc(orl_id)
         if label_ref == 'SHIPPING':
+            pairs = []
             prt_no_barcode_pair = ['<Text>3</Text>', f'<Text>{prt_no}</Text>']
             pairs.append(prt_no_barcode_pair)
             prt_no_pair = ['<String xml:space="preserve">: 3</String>',
@@ -416,10 +420,10 @@ def payload_handler(payload):
     return db_ref, db_ref_type, label_ref, qty_ref, station
 
 
-# TODO : Catch connection error during DB service downtime
 def main():
     global conn_sigm, sigm_query
     conn_sigm, sigm_query = sigm_conn()
+    get_dymo_printers()
     while 1:
         try:
             conn_sigm.poll()
@@ -431,6 +435,8 @@ def main():
 
             except:
                 pass
+            else:
+                get_dymo_printers()
         else:
             conn_sigm.commit()
             while conn_sigm.notifies:
@@ -439,7 +445,6 @@ def main():
 
                 db_ref, db_ref_type, label_ref, qty_ref, station = payload_handler(raw_payload)
 
-                get_dymo_printers()
                 printer = select_printer(label_ref, station)
 
                 if db_ref_type == 'plq_id':
