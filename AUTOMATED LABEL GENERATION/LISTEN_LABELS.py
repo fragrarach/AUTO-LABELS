@@ -25,7 +25,7 @@ def plq_id_prt_no(plq_id):
 
 # Pull 'prt_desc1' record from 'part' table based on 'prt_no' record
 def prt_no_prt_desc(prt_no):
-    sql_exp = f'SELECT trim(prt_desc1) FROM part WHERE prt_no = \'{prt_no}\''
+    sql_exp = f'SELECT trim(prt_desc2) FROM part WHERE prt_no = \'{prt_no}\''
     result_set = production_query(sql_exp)
     prt_desc1 = scalar_data(result_set)
     return prt_desc1
@@ -210,6 +210,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
             prt_no_pair = ['<Text></Text>', f'<Text>{prt_no}</Text>']
             pairs.append(prt_no_pair)
 
+            print(f'Printing {prt_no} on {label_ref} label using {printer}')
             print_label(pairs, label, printer, qty)
 
         elif label_ref == 'UNIT':
@@ -221,6 +222,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
                 prt_no_pair = ['<Text>2</Text>', f'<Text>{prt_no}</Text>']
                 pairs.append(prt_no_pair)
 
+                print(f'Printing {serial_no}, {prt_no} on {label_ref} label using {printer}')
                 print_label(pairs, label, printer)
 
         elif label_ref == 'SERIAL NUMBER':
@@ -230,6 +232,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
                 serial_no_pair = ['<Text></Text>', f'<Text>{serial_no}</Text>']
                 pairs.append(serial_no_pair)
 
+                print(f'Printing {serial_no} on {label_ref} label using {printer}')
                 print_label(pairs, label, printer, qty)
 
         elif label_ref == 'SHIPPING SERIAL NUMBER':
@@ -250,6 +253,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
                                   f'<String xml:space="preserve">: {serial_no}</String>']
                 pairs.append(serial_no_pair)
 
+                print(f'Printing {prt_no}, {serial_no}, {prt_desc} on {label_ref} label using {printer}')
                 print_label(pairs, label, printer, qty)
 
     elif db_ref_type == 'orl_id':
@@ -268,11 +272,13 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
                              f'<String xml:space="preserve">: {prt_desc}</String>']
             pairs.append(prt_desc_pair)
 
+            print(f'Printing {prt_no}, {prt_desc} on {label_ref} label using {printer}')
             print_label(pairs, label, printer, qty)
 
 
 # Set text label text, print label, revert label text
 def print_label(pairs, label, printer, qty=1):
+    copy_label_template(label)
     insert_label_text(pairs, label)
     dymo_print(printer, label, qty)
 
@@ -340,7 +346,6 @@ def main():
                 printer = select_printer(label_ref, station)
 
                 label = select_label(label_ref)
-                copy_label_template(label)
 
                 if db_ref_type == 'plq_id':
                     qty = select_print_qty(qty_ref, db_ref_type, db_ref)
