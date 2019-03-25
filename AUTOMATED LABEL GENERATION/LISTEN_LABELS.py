@@ -1,40 +1,13 @@
 import psycopg2.extensions
 import re
-import os
+from sigm import sigm_conn, tabular_data, scalar_data, production_query
 from win32com.client import Dispatch
 from shutil import copyfile
+
 
 # PostgreSQL DB connection configs
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
-
-
-# Check whether app should reference dev or prod server/db
-def dev_check():
-    raw_filename = os.path.basename(__file__)
-    removed_extension = raw_filename.split('.')[0]
-    last_word = removed_extension.split('_')[-1]
-    if last_word == 'DEV':
-        return True
-    else:
-        return False
-
-
-# Initialize production DB connection, listen cursor and query cursor
-def sigm_conn():
-    global conn_sigm, sigm_query
-    if dev_check():
-        conn_sigm = psycopg2.connect("host='192.168.0.57' dbname='DEV' user='SIGM' port='5493'")
-    else:
-        conn_sigm = psycopg2.connect("host='192.168.0.250' dbname='QuatroAir' user='SIGM' port='5493'")
-    conn_sigm.set_client_encoding("latin1")
-    conn_sigm.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-
-    sigm_listen = conn_sigm.cursor()
-    sigm_listen.execute("LISTEN labels;")
-    sigm_query = conn_sigm.cursor()
-
-    return conn_sigm, sigm_query
 
 
 # Dymo COM configs
@@ -42,135 +15,68 @@ labelCom = Dispatch('Dymo.DymoAddIn')
 labelText = Dispatch('Dymo.DymoLabels')
 
 
-# TODO : Create module for tabular/scalar data and production query functions so they can be imported/reused
-
-# Convert tabular query result to list (2D array)
-def tabular_data(result_set):
-    lines = []
-    for row in result_set:
-        line = []
-        for cell in row:
-            if type(cell) == str:
-                cell = cell.strip()
-            line.append(cell)
-        lines.append(line)
-    return lines
-
-
-# Convert scalar query result to singleton variable of any data type
-def scalar_data(result_set):
-    for row in result_set:
-        for cell in row:
-            if type(cell) == str:
-                cell = cell.strip()
-            return cell
-
-
-# Query production database
-def production_query(sql_exp):
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-    return result_set
-
-
-# TODO : Implement tabular/scalar data and production query functions in SQL functions
-
 # Pull 'prt_no' record from 'planning_lot_quantity' table based on 'plq_id' record
 def plq_id_prt_no(plq_id):
     sql_exp = f'SELECT trim(prt_no) FROM planning_lot_quantity WHERE plq_id = {plq_id}'
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    for row in result_set:
-        for cell in row:
-            prt_no = cell
-            return prt_no
+    result_set = production_query(sql_exp)
+    prt_no = scalar_data(result_set)
+    return prt_no
 
 
 # Pull 'prt_desc1' record from 'part' table based on 'prt_no' record
 def prt_no_prt_desc(prt_no):
     sql_exp = f'SELECT trim(prt_desc1) FROM part WHERE prt_no = \'{prt_no}\''
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    for row in result_set:
-        for cell in row:
-            prt_desc1 = cell
-            return prt_desc1
+    result_set = production_query(sql_exp)
+    prt_desc1 = scalar_data(result_set)
+    return prt_desc1
 
 
 # Pull 'plq_qty_per' record from 'planning_lot_quantity' table based on 'plq_id' record
 def plq_id_plq_qty_per(plq_id):
     sql_exp = f'SELECT plq_qty_per FROM planning_lot_quantity WHERE plq_id = {plq_id}'
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    for row in result_set:
-        for cell in row:
-            plq_qty_per = cell
-            return plq_qty_per
+    result_set = production_query(sql_exp)
+    plq_qty_per = scalar_data(result_set)
+    return plq_qty_per
 
 
 # Pull 'plq_qty_per' record from 'planning_lot_quantity' table based on 'plq_id' record
 def plq_id_plq_note(plq_id):
     sql_exp = f'SELECT trim(plq_note) FROM planning_lot_quantity WHERE plq_id = {plq_id}'
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    for row in result_set:
-        for cell in row:
-            plq_note = cell
-            return plq_note
+    result_set = production_query(sql_exp)
+    plq_note = scalar_data(result_set)
+    return plq_note
 
 
 # Pull 'orl_id' record from 'order_line' table based on 'ord_no' record
 def ord_no_orl_id(ord_no):
     sql_exp = f'SELECT orl_id FROM order_line WHERE ord_no = {ord_no} AND prt_no <> \'\''
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    orl_ids = []
-    for row in result_set:
-        for cell in row:
-            orl_id = cell
-            orl_ids.append(orl_id)
+    result_set = production_query(sql_exp)
+    orl_ids = tabular_data(result_set)
     return orl_ids
 
 
 # Pull 'orl_quantity' record from 'order_line' table based on 'orl_id' record
 def orl_id_orl_qty(orl_id):
     sql_exp = f'SELECT (orl_quantity)::INT FROM order_line WHERE orl_id = {orl_id}'
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    for row in result_set:
-        for cell in row:
-            orl_quantity = cell
-            return orl_quantity
+    result_set = production_query(sql_exp)
+    orl_quantity = scalar_data(result_set)
+    return orl_quantity
 
 
 # Pull 'prt_no' record from 'order_line' table based on 'orl_id' record
 def orl_id_prt_no(orl_id):
     sql_exp = f'SELECT trim(prt_no) FROM order_line WHERE orl_id = {orl_id}'
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    for row in result_set:
-        for cell in row:
-            prt_no = cell
-            return prt_no
+    result_set = production_query(sql_exp)
+    prt_no = scalar_data(result_set)
+    return prt_no
 
 
 # Pull 'prt_no' record from 'order_line' table based on 'orl_id' record
 def orl_id_prt_desc(orl_id):
     sql_exp = f'SELECT trim(prt_desc) FROM order_line WHERE orl_id = {orl_id}'
-    sigm_query.execute(sql_exp)
-    result_set = sigm_query.fetchall()
-
-    for row in result_set:
-        for cell in row:
-            prt_desc = cell
-            return prt_desc
+    result_set = production_query(sql_exp)
+    prt_desc = scalar_data(result_set)
+    return prt_desc
 
 
 # Return list of serial numbers from string stored in planning book note field (planning_lot_quantity.plq_note)
@@ -291,11 +197,7 @@ def copy_label_template(label):
 
 
 # Edit label text based on label/DB reference passed by payload
-def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
-    # TODO : Put 'select_label' function in the main loop, pass label instead of label_ref
-    label = select_label(label_ref)
-    copy_label_template(label)
-
+def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
     if db_ref_type == 'plq_id':
         # PLETI Report
         plq_id = db_ref
@@ -373,7 +275,6 @@ def label_text_handler(db_ref_type, db_ref, label_ref, printer, qty):
 def print_label(pairs, label, printer, qty=1):
     insert_label_text(pairs, label)
     dymo_print(printer, label, qty)
-    reset_label_text(pairs, label)
 
 
 # Dymo COM API functions
@@ -396,18 +297,6 @@ def insert_label_text(pairs, label):
             file.write(file_data)
 
 
-# TODO : Test if copying template is faster/more consistent than reverting text changes
-# Pass list of pairs of strings (old text, new text) to revert label XML text
-def reset_label_text(pairs, label):
-    for pair in pairs:
-        with open(label, "r") as file:
-            file_data = file.read()
-        file_data = file_data.replace(pair[1], pair[0])
-
-        with open(label, "w") as file:
-            file.write(file_data)
-
-
 # Split payload string, return named variables
 def payload_handler(payload):
     db_ref = payload.split(', ')[0]
@@ -421,9 +310,12 @@ def payload_handler(payload):
 
 
 def main():
+    channel = 'labels'
     global conn_sigm, sigm_query
-    conn_sigm, sigm_query = sigm_conn()
+    conn_sigm, sigm_query = sigm_conn(channel)
+
     get_dymo_printers()
+
     while 1:
         try:
             conn_sigm.poll()
@@ -447,15 +339,18 @@ def main():
 
                 printer = select_printer(label_ref, station)
 
+                label = select_label(label_ref)
+                copy_label_template(label)
+
                 if db_ref_type == 'plq_id':
                     qty = select_print_qty(qty_ref, db_ref_type, db_ref)
-                    label_text_handler(db_ref_type, db_ref, label_ref, printer, qty)
+                    label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty)
                 elif db_ref_type == 'ord_no':
                     ord_no = db_ref
                     orl_ids = ord_no_orl_id(ord_no)
                     for orl_id in orl_ids:
                         qty = select_print_qty(qty_ref, 'orl_id', orl_id)
-                        label_text_handler('orl_id', orl_id, label_ref, printer, qty)
+                        label_text_handler('orl_id', orl_id, label_ref, label, printer, qty)
 
 
 main()
