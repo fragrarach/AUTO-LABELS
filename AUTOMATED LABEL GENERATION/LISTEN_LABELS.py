@@ -167,6 +167,7 @@ def select_printer(label_ref, station):
 
 # Return label based on which report is being run
 def select_label(label_ref):
+    # TODO : Make this path reference relative
     label_dir = \
         r'E:\DATA\Fortune\SIGMWIN.DTA\QuatroAir\Documents\REFERENCE FILES\AUTOMATED LABEL GENERATION\DYMO LABELS'
 
@@ -329,7 +330,7 @@ def main():
             print('Database cannot be accessed, PostgreSQL service probably rebooting')
             try:
                 conn_sigm.close()
-                conn_sigm, sigm_query = sigm_conn()
+                conn_sigm, sigm_query = sigm_conn(channel)
 
             except:
                 pass
