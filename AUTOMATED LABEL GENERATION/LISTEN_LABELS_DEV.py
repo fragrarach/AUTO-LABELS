@@ -1,6 +1,6 @@
 import psycopg2.extensions
 import re
-from sigm import sigm_conn, tabular_data, scalar_data, production_query
+from sigm import sigm_conn, get_parent, tabular_data, scalar_data, production_query
 from win32com.client import Dispatch
 from shutil import copyfile
 
@@ -167,8 +167,8 @@ def select_printer(label_ref, station):
 
 # Return label based on which report is being run
 def select_label(label_ref):
-    label_dir = \
-        r'E:\DATA\Fortune\SIGMWIN.DTA\QuatroAir\Documents\REFERENCE FILES\AUTOMATED LABEL GENERATION\DYMO LABELS'
+    parent = get_parent()
+    label_dir = parent + '\\DYMO LABELS'
 
     control_panel_label = label_dir + '\CONTROL PANEL.label'
     unit_label = label_dir + r'\UNIT.label'
