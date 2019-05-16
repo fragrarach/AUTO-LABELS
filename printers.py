@@ -1,10 +1,9 @@
-from config import Config
 from files import copy_label_template, insert_label_text
 
 
 # Pull list of currently online shared Dymo printers on the network
-def get_dymo_printers():
-    printers = Config.DYMO_COM.GetDymoPrinters()
+def get_dymo_printers(config):
+    printers = config.DYMO_COM.GetDymoPrinters()
     print(printers)
 
 
@@ -38,20 +37,16 @@ def select_printer(label_ref, station):
 
 
 # Dymo COM API functions
-def dymo_print(printer, label, print_qty=1):
-    Config.DYMO_COM.SelectPrinter(printer)
-    Config.DYMO_COM.Open(label)
-    Config.DYMO_COM.StartPrintJob()
-    Config.DYMO_COM.Print(print_qty, False)
-    Config.DYMO_COM.EndPrintJob()
+def dymo_print(config, printer, label, print_qty=1):
+    config.DYMO_COM.SelectPrinter(printer)
+    config.DYMO_COM.Open(label)
+    config.DYMO_COM.StartPrintJob()
+    config.DYMO_COM.Print(print_qty, False)
+    config.DYMO_COM.EndPrintJob()
 
 
 # Set text label text, print label, revert label text
-def print_label(pairs, label, printer, qty=1):
+def print_label(config, pairs, label, printer, qty=1):
     copy_label_template(label)
     insert_label_text(pairs, label)
-    dymo_print(printer, label, qty)
-
-
-if __name__ == "__main__":
-    get_dymo_printers()
+    dymo_print(config, printer, label, qty)

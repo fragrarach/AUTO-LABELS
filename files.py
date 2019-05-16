@@ -1,13 +1,12 @@
 from shutil import copyfile
-from config import Config
-from sql import plq_id_prt_no, prt_no_prt_desc, orl_id_prt_no, orl_id_prt_desc
+from statements import plq_id_prt_no, prt_no_prt_desc, orl_id_prt_no, orl_id_prt_desc
 from data import serial_no_range
 import printers
 
 
 # Return label based on which report is being run
-def select_label(label_ref):
-    label_dir = Config.PARENT_DIR + '\\files\\DYMO LABELS'
+def select_label(config, label_ref):
+    label_dir = config.PARENT_DIR + '\\files\\DYMO LABELS'
 
     if label_ref == 'CONTROL PANEL':
         return label_dir + r'\CONTROL PANEL.label'
@@ -30,13 +29,13 @@ def copy_label_template(label):
 
 
 # Edit label text based on label/DB reference passed by payload
-def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
+def label_text_handler(config, db_ref_type, db_ref, label_ref, label, printer, qty):
     if db_ref_type == 'plq_id':
         # PLETI Report
         plq_id = db_ref
-        prt_no = plq_id_prt_no(plq_id)
-        prt_desc = prt_no_prt_desc(prt_no)
-        serial_no_list = serial_no_range(plq_id)
+        prt_no = plq_id_prt_no(config, plq_id)
+        prt_desc = prt_no_prt_desc(config, prt_no)
+        serial_no_list = serial_no_range(config, plq_id)
 
         if label_ref == 'CONTROL PANEL':
             pairs = []
@@ -44,7 +43,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
             pairs.append(prt_no_pair)
 
             print(f'Printing {prt_no} on {label_ref} label using {printer}')
-            printers.print_label(pairs, label, printer, qty)
+            printers.print_label(config, pairs, label, printer, qty)
 
         elif label_ref == 'UNIT':
             for serial_no in serial_no_list:
@@ -56,7 +55,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
                 pairs.append(prt_no_pair)
 
                 print(f'Printing {serial_no}, {prt_no} on {label_ref} label using {printer}')
-                printers.print_label(pairs, label, printer)
+                printers.print_label(config, pairs, label, printer)
 
         elif label_ref == 'SERIAL NUMBER':
             for serial_no in serial_no_list:
@@ -66,7 +65,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
                 pairs.append(serial_no_pair)
 
                 print(f'Printing {serial_no} on {label_ref} label using {printer}')
-                printers.print_label(pairs, label, printer, qty)
+                printers.print_label(config, pairs, label, printer, qty)
 
         elif label_ref == 'SHIPPING SERIAL NUMBER':
             for serial_no in serial_no_list:
@@ -87,13 +86,13 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
                 pairs.append(serial_no_pair)
 
                 print(f'Printing {prt_no}, {serial_no}, {prt_desc} on {label_ref} label using {printer}')
-                printers.print_label(pairs, label, printer, qty)
+                printers.print_label(config, pairs, label, printer, qty)
 
     elif db_ref_type == 'orl_id':
         # CCETI Report
         orl_id = db_ref
-        prt_no = orl_id_prt_no(orl_id)
-        prt_desc = orl_id_prt_desc(orl_id)
+        prt_no = orl_id_prt_no(config, orl_id)
+        prt_desc = orl_id_prt_desc(config, orl_id)
         if label_ref == 'SHIPPING':
             pairs = []
             prt_no_barcode_pair = ['<Text>3</Text>', f'<Text>{prt_no}</Text>']
@@ -106,7 +105,7 @@ def label_text_handler(db_ref_type, db_ref, label_ref, label, printer, qty):
             pairs.append(prt_desc_pair)
 
             print(f'Printing {prt_no}, {prt_desc} on {label_ref} label using {printer}')
-            printers.print_label(pairs, label, printer, qty)
+            printers.print_label(config, pairs, label, printer, qty)
 
 
 # Pass list of pairs of strings (old text, new text) to edit label XML text
