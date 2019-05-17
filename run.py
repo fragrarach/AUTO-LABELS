@@ -1,13 +1,14 @@
-from quatro import get_parent
+import os
 from subprocess import call
 
 
-parent_path = get_parent()
+script_path = os.path.realpath(__file__)
+parent_path = os.path.abspath(os.path.join(script_path, os.pardir))
 parent_name = parent_path.split("\\")[-1]
+app_path = f'{parent_path}\\{parent_name}.py'
 
 venv_path = f'{parent_path}\\venv\\Scripts\\python.exe'
-script_path = f'{parent_path}\\{parent_name}.py'
 
-command = f'"{venv_path}" "{script_path}"'
+command = f'"{venv_path}" "{app_path}"'
 
 call(command)
