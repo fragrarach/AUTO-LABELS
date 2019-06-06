@@ -11,10 +11,10 @@ def get_dymo_printers(config):
 def select_printer(label_ref, station):
     control_panel_printer = r'DEV DYMO'
     unit_printer = r'DEV DYMO'
-    serial_number_printer = f'\\\\DESKTOP-PKO4ES1.aerofil.local\\DYMO 450 SERIAL'
+    serial_number_printer = f'\\\\SHIPPING03\\DYMO 450 SERIAL'
 
-    if station == 'DESKTOP-PKO4ES1':
-        shipping_printer = f'\\\\DESKTOP-PKO4ES1\\ERICK DYMO'
+    if station == 'SHIPPING03':
+        shipping_printer = f'\\\\SHIPPING03\\ERICK DYMO'
     elif station == 'CAD2':
         shipping_printer = f'\\\\CAD2.aerofil.local\\DEV SHIPPING DYMO'
     elif station == 'DESKTOP-FG8A5QJ':
