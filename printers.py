@@ -8,32 +8,23 @@ def get_dymo_printers(config):
 
 
 # Return printer based on which computer is passing the payload
-def select_printer(label_ref, station):
-    control_panel_printer = r'DEV DYMO'
-    unit_printer = r'DEV DYMO'
-    serial_number_printer = f'\\\\SHIPPING03\\DYMO 450 SERIAL'
-
-    if station == 'SHIPPING03':
-        shipping_printer = f'\\\\SHIPPING03\\ERICK DYMO'
-    elif station == 'CAD2':
-        shipping_printer = f'\\\\CAD2.aerofil.local\\DEV SHIPPING DYMO'
-    elif station == 'DESKTOP-FG8A5QJ':
-        shipping_printer = f'\\\\DESKTOP-FG8A5QJ.aerofil.local\\GATTA DYMO'
-    elif station == 'DESKTOP-69UD4SH':
-        shipping_printer = f'\\\\DESKTOP-69UD4SH\\JORGE DYMO'
+def select_printer(config, label_ref, station):
+    if station in ('SHIPPING03', 'CAD2', 'DESKTOP-FG8A5QJ', 'DESKTOP-69UD4SH'):
+        shipping_printer = f"\\\\{config.STATIONS[station]['full computer name']}" \
+                           f"\\{config.STATIONS[station]['shipping printer name']}"
     else:
-        shipping_printer = f'\\\\DESKTOP-FG8A5QJ.aerofil.local\\GATTA DYMO'
+        shipping_printer = config.PRINTERS['default shipping printer']
 
     if label_ref == 'CONTROL PANEL':
-        return control_panel_printer
+        return config.PRINTERS['control panel']
     elif label_ref == 'UNIT':
-        return unit_printer
+        return config.PRINTERS['unit printer']
     elif label_ref == 'SHIPPING':
         return shipping_printer
     elif label_ref == 'SHIPPING SERIAL NUMBER':
         return shipping_printer
     elif label_ref == 'SERIAL NUMBER':
-        return serial_number_printer
+        return config.PRINTERS['serial number printer']
 
 
 # Dymo COM API functions

@@ -9,7 +9,7 @@ def listen_task(config, notify):
 
     db_ref, db_ref_type, label_ref, qty_ref, station = data.payload_handler(raw_payload)
 
-    printer = printers.select_printer(label_ref, station)
+    printer = printers.select_printer(config, label_ref, station)
 
     label = files.select_label(config, label_ref)
 

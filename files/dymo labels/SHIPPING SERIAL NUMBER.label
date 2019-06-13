@@ -86,7 +86,7 @@ www.quatro-air.com</String>
 			<IsVariable>True</IsVariable>
 			<GroupID>-1</GroupID>
 			<IsOutlined>False</IsOutlined>
-			<Text>1-0036-0004</Text>
+			<Text>AX382-I16</Text>
 			<Type>Code128B</Type>
 			<Size>Medium</Size>
 			<TextPosition>None</TextPosition>
@@ -124,7 +124,7 @@ www.quatro-air.com</String>
 					</Attributes>
 				</Element>
 				<Element>
-					<String xml:space="preserve">: 1-0036-0004</String>
+					<String xml:space="preserve">: AX382-I16</String>
 					<Attributes>
 						<Font Family="Arial" Size="12" Bold="True" Italic="False" Underline="False" Strikeout="False" />
 						<ForeColor Alpha="255" Red="0" Green="0" Blue="0" HueScale="100" />
@@ -159,7 +159,7 @@ www.quatro-air.com</String>
 					</Attributes>
 				</Element>
 				<Element>
-					<String xml:space="preserve">: SPH82B5i-T44G-EA c/w HD NA 230V Twist Lock Power Cord</String>
+					<String xml:space="preserve">: iVAC 2 TWIN Infinity Roland DWX51D</String>
 					<Attributes>
 						<Font Family="Arial" Size="12" Bold="False" Italic="False" Underline="False" Strikeout="False" />
 						<ForeColor Alpha="255" Red="0" Green="0" Blue="0" HueScale="100" />
@@ -180,7 +180,7 @@ www.quatro-air.com</String>
 			<IsVariable>True</IsVariable>
 			<GroupID>-1</GroupID>
 			<IsOutlined>False</IsOutlined>
-			<Text>63308</Text>
+			<Text>99999</Text>
 			<Type>Code128B</Type>
 			<Size>Medium</Size>
 			<TextPosition>None</TextPosition>
@@ -218,7 +218,7 @@ www.quatro-air.com</String>
 					</Attributes>
 				</Element>
 				<Element>
-					<String xml:space="preserve">: 63308</String>
+					<String xml:space="preserve">: 99999</String>
 					<Attributes>
 						<Font Family="Arial" Size="12" Bold="True" Italic="False" Underline="False" Strikeout="False" />
 						<ForeColor Alpha="255" Red="0" Green="0" Blue="0" HueScale="100" />
