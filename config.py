@@ -41,5 +41,39 @@ class Config:
                                  f"\\{STATIONS['SHIPPING03']['serial printer name']}"
     }
 
+    CUSTOMERS = {
+        'sirona': [
+            'RS109',
+            'RS109U',
+            'RES109',
+            'TEST_CLI'
+        ]
+    }
+
+    LABELS = {
+        'control panel': [
+            'prt_no'
+        ],
+        'unit': [
+            'serial_no',
+            'prt_no'
+        ],
+        'serial number': [
+            'serial_no'
+        ],
+        'shipping serial number': [
+            'prt_no',
+            'serial_no',
+            'prt_no',
+            'prt_desc',
+            'serial_no'
+        ],
+        'shipping': [
+            'prt_no',
+            'prt_no',
+            'prt_desc'
+        ]
+    }
+
     def __init__(self):
         self.sigm_connection, self.sigm_db_cursor = sigm_connect(Config.LISTEN_CHANNEL)

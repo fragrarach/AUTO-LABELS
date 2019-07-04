@@ -33,6 +33,13 @@ def plq_id_plq_note(config, plq_id):
     return plq_note
 
 
+def orl_id_plq_note(config, orl_id):
+    sql_exp = f'SELECT trim(plq_note) FROM planning_lot_quantity WHERE orl_id = {orl_id}'
+    result_set = sql_query(sql_exp, config.sigm_db_cursor)
+    plq_note = scalar_data(result_set)
+    return plq_note
+
+
 # Pull 'orl_id' record from 'order_line' table based on 'ord_no' record
 def ord_no_orl_id(config, ord_no):
     sql_exp = f'SELECT orl_id FROM order_line WHERE ord_no = {ord_no} AND prt_no <> \'\''
@@ -49,6 +56,13 @@ def orl_id_orl_qty(config, orl_id):
     return orl_quantity
 
 
+def orl_id_orl_qty_ready(config, orl_id):
+    sql_exp = f'SELECT (orl_qty_ready)::INT FROM order_line WHERE orl_id = {orl_id}'
+    result_set = sql_query(sql_exp, config.sigm_db_cursor)
+    orl_qty_ready = scalar_data(result_set)
+    return orl_qty_ready
+
+
 # Pull 'prt_no' record from 'order_line' table based on 'orl_id' record
 def orl_id_prt_no(config, orl_id):
     sql_exp = f'SELECT trim(prt_no) FROM order_line WHERE orl_id = {orl_id}'
@@ -63,3 +77,10 @@ def orl_id_prt_desc(config, orl_id):
     result_set = sql_query(sql_exp, config.sigm_db_cursor)
     prt_desc = scalar_data(result_set)
     return prt_desc
+
+
+def ord_no_cli_no(config, ord_no):
+    sql_exp = f'SELECT cli_no FROM order_header JOIN client USING(cli_id) WHERE ord_no = {ord_no}'
+    result_set = sql_query(sql_exp, config.sigm_db_cursor)
+    cli_no = scalar_data(result_set)
+    return cli_no

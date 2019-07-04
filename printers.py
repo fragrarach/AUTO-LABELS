@@ -17,12 +17,13 @@ def select_printer(config, label_ref, station):
 
     if label_ref == 'CONTROL PANEL':
         return config.PRINTERS['control panel']
+
     elif label_ref == 'UNIT':
         return config.PRINTERS['unit printer']
-    elif label_ref == 'SHIPPING':
+
+    elif label_ref in ('SHIPPING', 'SHIPPING SERIAL NUMBER', 'CLIENT'):
         return shipping_printer
-    elif label_ref == 'SHIPPING SERIAL NUMBER':
-        return shipping_printer
+
     elif label_ref == 'SERIAL NUMBER':
         return config.PRINTERS['serial number printer']
 
