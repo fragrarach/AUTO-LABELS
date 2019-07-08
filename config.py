@@ -11,6 +11,7 @@ class Config:
     DYMO_LABEL = Dispatch('Dymo.DymoLabels')
 
     PARENT_DIR = dirname(abspath(__file__))
+    LABEL_DIR = PARENT_DIR + r'\files\DYMO LABELS'
 
     STATIONS = {
         'CAD2': {
@@ -50,29 +51,64 @@ class Config:
         ]
     }
 
-    LABELS = {
-        'control panel': [
-            'prt_no'
-        ],
-        'unit': [
-            'serial_no',
-            'prt_no'
-        ],
-        'serial number': [
-            'serial_no'
-        ],
-        'shipping serial number': [
-            'prt_no',
-            'serial_no',
-            'prt_no',
-            'prt_desc',
-            'serial_no'
-        ],
-        'shipping': [
-            'prt_no',
-            'prt_no',
-            'prt_desc'
-        ]
+    DYNAMIC_LABELS = {
+        'generic': {
+            'CONTROL PANEL': {
+                'dynamic text': [
+                    'prt_no'
+                ],
+                'path': LABEL_DIR + r'\generic\dynamic\CONTROL PANEL.label'
+            },
+            'UNIT': {
+                'dynamic text': [
+                    'serial_no',
+                    'prt_no'
+                ],
+                'path': LABEL_DIR + r'\generic\dynamic\UNIT.label'
+            },
+            'SERIAL NUMBER': {
+                'dynamic text': [
+                    'serial_no'
+                ],
+                'path': LABEL_DIR + r'\generic\dynamic\SERIAL NUMBER.label'
+            },
+            'SHIPPING SERIAL NUMBER': {
+                'dynamic text': [
+                    'prt_no',
+                    'serial_no',
+                    'prt_no',
+                    'prt_desc',
+                    'serial_no'
+                ],
+                'path': LABEL_DIR + r'\generic\dynamic\SHIPPING SERIAL NUMBER.label'
+            },
+            'SHIPPING': {
+                'dynamic text': [
+                    'prt_no',
+                    'prt_no',
+                    'prt_desc'
+                ],
+                'path': LABEL_DIR + r'\generic\dynamic\SHIPPING.label'
+            }
+        },
+        'sirona': {
+            'AX139-16 R4.3': {
+                'dynamic text': [
+                    'serial_no',
+                    'mod_43',
+                    'serial_no'
+                ],
+                'path': LABEL_DIR + r'\sirona\dynamic\AX139-16 R4.3.label'
+            },
+            'AX139-25 R4.3': {
+                'dynamic text': [
+                    'serial_no',
+                    'mod_43',
+                    'serial_no'
+                ],
+                'path': LABEL_DIR + r'\sirona\dynamic\AX139-25 R4.3.label'
+            }
+        }
     }
 
     def __init__(self):

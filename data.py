@@ -6,12 +6,15 @@ from statements import plq_id_plq_qty_per, orl_id_orl_qty_ready
 def payload_handler(payload):
     db_ref = payload.split(', ')[0]
     db_ref_type = payload.split(', ')[1]
-    label_ref = payload.split(', ')[2]
+    label_type = payload.split(', ')[2]
     qty_ref = payload.split(', ')[3]
-    sigm_string = payload.split(', ')[4]
+    label_name = ''
+    if label_type == 'GENERIC':
+        label_name = payload.split(', ')[4]
+    sigm_string = payload.split(', ')[-1]
     station = re.findall(r'(?<= w)(.*)$', sigm_string)[0]
 
-    return db_ref, db_ref_type, label_ref, qty_ref, station
+    return db_ref, db_ref_type, label_type, label_name, qty_ref, station
 
 
 # Generate range of serial numbers from 'XXXXX to XXXXX' formatted string
@@ -53,10 +56,10 @@ def serial_no_range(plq_note):
 
 def modulo_43(string):
     ref = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-._$/+%'
-    sum = 0
+    total = 0
     for character in string:
-        sum += ref.find(character)
-    remainder = sum % 43
+        total += ref.find(character)
+    remainder = total % 43
     return ref[remainder]
 
 
@@ -71,5 +74,11 @@ def select_print_qty(config, qty_ref, db_ref_type, ref):
         elif db_ref_type == 'orl_id':
             orl_id = ref
             qty = orl_id_orl_qty_ready(config, orl_id)
-
     return qty
+
+
+def get_cli_no_customer(config, cli_no):
+    for customer in config.CUSTOMERS:
+        if cli_no in config.CUSTOMERS[customer]:
+            return customer
+    return 'generic'

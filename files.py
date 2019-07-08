@@ -1,44 +1,21 @@
 import os
 from shutil import copyfile
-from statements import plq_id_prt_no, prt_no_prt_desc, orl_id_prt_no, orl_id_prt_desc, plq_id_plq_note
-from data import serial_no_range
+from statements import plq_id_prt_no, prt_no_prt_desc, orl_id_prt_no, orl_id_prt_desc, plq_id_plq_note, orl_id_plq_note
+from data import serial_no_range, modulo_43
 import printers
 
 
-# Return label based on which report is being run
-def select_label(config, label_ref, cli_no=None, orl_id=None):
-    label_dir = config.PARENT_DIR + '\\files\\DYMO LABELS'
+def get_label_content_type(config, customer, label_name):
+    static_label_path = config.LABEL_DIR + '\\' + customer + r'\static' + '\\' + label_name + '.label'
+    dynamic_label_path = config.LABEL_DIR + '\\' + customer + r'\dynamic' + '\\' + label_name + '.label'
 
-    if label_ref == 'CONTROL PANEL':
-        return label_dir + r'\generic\dynamic\CONTROL PANEL.label'
+    if os.path.exists(static_label_path):
+        content_type = 'static'
+        return content_type
 
-    elif label_ref == 'UNIT':
-        return label_dir + r'\generic\dynamic\UNIT.label'
-
-    elif label_ref == 'SHIPPING':
-        return label_dir + r'\generic\dynamic\SHIPPING.label'
-
-    elif label_ref == 'SHIPPING SERIAL NUMBER':
-        return label_dir + r'\generic\dynamic\SHIPPING SERIAL NUMBER.label'
-
-    elif label_ref == 'SERIAL NUMBER':
-        return label_dir + r'\generic\dynamic\SERIAL NUMBER.label'
-
-    elif label_ref == 'CLIENT':
-        for customer in config.CUSTOMERS:
-            if cli_no in config.CUSTOMERS[f'{customer}']:
-                prt_no = orl_id_prt_no(config, orl_id)
-                label_name = fr'\{prt_no}.label'
-                static_label_path = label_dir + '\\' + customer + r'\static' + label_name
-                dynamic_label_path = label_dir + '\\' + customer + r'\dynamic' + label_name
-
-                if os.path.exists(static_label_path):
-                    label_type = 'static'
-                    return static_label_path, label_type
-
-                elif os.path.exists(dynamic_label_path):
-                    label_type = 'dynamic'
-                    return dynamic_label_path, label_type
+    elif os.path.exists(dynamic_label_path):
+        content_type = 'dynamic'
+        return content_type
     return
 
 
@@ -50,82 +27,7 @@ def copy_label_template(label):
     copyfile(label_template, label)
 
 
-def control_panel_label_text(prt_no):
-    pairs = []
-    prt_no_pair = ['<Text></Text>', f'<Text>{prt_no}</Text>']
-    pairs.append(prt_no_pair)
-
-    return pairs
-
-
-def unit_label_text(serial_no, prt_no):
-    pairs = []
-    serial_no = str(serial_no)
-    serial_no_pair = ['<Text>1</Text>', f'<Text>{serial_no}</Text>']
-    pairs.append(serial_no_pair)
-    prt_no_pair = ['<Text>2</Text>', f'<Text>{prt_no}</Text>']
-    pairs.append(prt_no_pair)
-
-    return pairs
-
-
-def serial_number_label_barcode_text(serial_no):
-    pairs = []
-    serial_no = str(serial_no)
-    serial_no_pair = ['<Text></Text>', f'<Text>{serial_no}</Text>']
-    pairs.append(serial_no_pair)
-
-    return pairs
-
-
-def serial_number_label_hybrid_text(serial_no, mod43):
-    pairs = []
-    serial_no = str(serial_no)
-    serial_no_text_pair = ['<String xml:space="preserve">SERIAL_NUMBER</String>',
-                           f'<String xml:space="preserve">{serial_no}</String>']
-    pairs.append(serial_no_text_pair)
-    serial_no_barcode_pair = ['{SERIAL_NUMBER}', f'{serial_no}{mod43}']
-    pairs.append(serial_no_barcode_pair)
-
-    return pairs
-
-
-def shipping_serial_number_label_text(serial_no, prt_no, prt_desc):
-    pairs = []
-    serial_no = str(serial_no)
-    prt_no_barcode_pair = ['<Text>3</Text>', f'<Text>{prt_no}</Text>']
-    pairs.append(prt_no_barcode_pair)
-    serial_no_barcode_pair = ['<Text>12345</Text>', f'<Text>{serial_no}</Text>']
-    pairs.append(serial_no_barcode_pair)
-    prt_no_pair = ['<String xml:space="preserve">: 3</String>',
-                   f'<String xml:space="preserve">: {prt_no}</String>']
-    pairs.append(prt_no_pair)
-    prt_desc_pair = ['<String xml:space="preserve">: 2</String>',
-                     f'<String xml:space="preserve">: {prt_desc}</String>']
-    pairs.append(prt_desc_pair)
-    serial_no_pair = ['<String xml:space="preserve">: 12345</String>',
-                      f'<String xml:space="preserve">: {serial_no}</String>']
-    pairs.append(serial_no_pair)
-
-    return pairs
-
-
-def shipping_label_text(prt_no, prt_desc):
-    pairs = []
-    prt_no_barcode_pair = ['<Text>3</Text>', f'<Text>{prt_no}</Text>']
-    pairs.append(prt_no_barcode_pair)
-    prt_no_pair = ['<String xml:space="preserve">: 3</String>',
-                   f'<String xml:space="preserve">: {prt_no}</String>']
-    pairs.append(prt_no_pair)
-    prt_desc_pair = ['<String xml:space="preserve">: 2</String>',
-                     f'<String xml:space="preserve">: {prt_desc}</String>']
-    pairs.append(prt_desc_pair)
-
-    return pairs
-
-
-# Edit label text based on label/DB reference passed by payload
-def label_text_handler(config, db_ref_type, db_ref, label_ref, label, printer, qty):
+def dynamic_label_handler(config, db_ref_type, db_ref, label_path, customer, label_name, printer, qty):
     # PLETI Report
     if db_ref_type == 'plq_id':
         plq_id = db_ref
@@ -134,28 +36,24 @@ def label_text_handler(config, db_ref_type, db_ref, label_ref, label, printer, q
         plq_note = plq_id_plq_note(config, plq_id)
         serial_no_list = serial_no_range(plq_note)
 
-        if label_ref == 'CONTROL PANEL':
-            pairs = control_panel_label_text(prt_no)
-            print(f'Printing {prt_no} on {label_ref} label using {printer}')
-            printers.print_label(config, pairs, label, printer, qty)
+        if label_name == 'CONTROL PANEL':
+            refs = [prt_no]
+            printers.print_dynamic_label(config, refs, label_path, customer, label_name, printer, qty)
 
-        elif label_ref == 'UNIT':
+        elif label_name == 'UNIT':
             for serial_no in serial_no_list:
-                pairs = unit_label_text(serial_no, prt_no)
-                print(f'Printing {serial_no}, {prt_no} on {label_ref} label using {printer}')
-                printers.print_label(config, pairs, label, printer)
+                refs = [serial_no, prt_no]
+                printers.print_dynamic_label(config, refs, label_path, customer, label_name, printer, qty)
 
-        elif label_ref == 'SERIAL NUMBER':
+        elif label_name == 'SERIAL NUMBER':
             for serial_no in serial_no_list:
-                pairs = serial_number_label_barcode_text(serial_no)
-                print(f'Printing {serial_no} on {label_ref} label using {printer}')
-                printers.print_label(config, pairs, label, printer, qty)
+                refs = [serial_no]
+                printers.print_dynamic_label(config, refs, label_path, customer, label_name, printer, qty)
 
-        elif label_ref == 'SHIPPING SERIAL NUMBER':
+        elif label_name == 'SHIPPING SERIAL NUMBER':
             for serial_no in serial_no_list:
-                pairs = shipping_serial_number_label_text(serial_no, prt_no, prt_desc)
-                print(f'Printing {prt_no}, {serial_no}, {prt_desc} on {label_ref} label using {printer}')
-                printers.print_label(config, pairs, label, printer, qty)
+                refs = [prt_no, serial_no, prt_no, prt_desc, serial_no]
+                printers.print_dynamic_label(config, refs, label_path, customer, label_name, printer, qty)
 
     # CCETI Report
     elif db_ref_type == 'orl_id':
@@ -163,18 +61,26 @@ def label_text_handler(config, db_ref_type, db_ref, label_ref, label, printer, q
         prt_no = orl_id_prt_no(config, orl_id)
         prt_desc = orl_id_prt_desc(config, orl_id)
 
-        if label_ref == 'SHIPPING':
-            pairs = shipping_label_text(prt_no, prt_desc)
-            print(f'Printing {prt_no}, {prt_desc} on {label_ref} label using {printer}')
-            printers.print_label(config, pairs, label, printer, qty)
+        if customer == 'sirona':
+            plq_note = orl_id_plq_note(config, orl_id)
+            serial_no_list = serial_no_range(plq_note)
+            for serial_no in serial_no_list:
+                mod43 = modulo_43(serial_no)
+                refs = [serial_no, mod43, serial_no]
+                qty = 1
+                printers.print_dynamic_label(config, refs, label_path, customer, label_name, printer, qty)
+        else:
+            if label_name == 'SHIPPING':
+                refs = [prt_no, prt_no, prt_desc]
+                printers.print_dynamic_label(config, refs, label_path, customer, label_name, printer, qty)
 
 
-# Pass list of pairs of strings (old text, new text) to edit label XML text
-def insert_label_text(pairs, label):
-    for pair in pairs:
-        with open(label, "r") as file:
+def insert_label_text(config, refs, label_path, customer, label_name):
+    for index, ref in enumerate(refs):
+        with open(label_path, "r") as file:
             file_data = file.read()
-        file_data = file_data.replace(pair[0], pair[1])
+        dynamic_text = config.DYNAMIC_LABELS[customer][label_name]['dynamic text'][index]
+        file_data = file_data.replace(dynamic_text, str(ref), 1)
 
-        with open(label, "w") as file:
+        with open(label_path, "w") as file:
             file.write(file_data)

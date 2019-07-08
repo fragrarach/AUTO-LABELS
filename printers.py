@@ -37,8 +37,7 @@ def dymo_print(config, printer, label, print_qty=1):
     config.DYMO_COM.EndPrintJob()
 
 
-# Set text label text, print label, revert label text
-def print_label(config, pairs, label, printer, qty=1):
-    copy_label_template(label)
-    insert_label_text(pairs, label)
-    dymo_print(config, printer, label, qty)
+def print_dynamic_label(config, refs, label_path, customer, label_name, printer, qty=1):
+    copy_label_template(label_path)
+    insert_label_text(config, refs, label_path, customer, label_name)
+    dymo_print(config, printer, label_path, qty)

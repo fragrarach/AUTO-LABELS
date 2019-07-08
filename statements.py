@@ -84,3 +84,14 @@ def ord_no_cli_no(config, ord_no):
     result_set = sql_query(sql_exp, config.sigm_db_cursor)
     cli_no = scalar_data(result_set)
     return cli_no
+
+
+def plq_id_cli_no(config, plq_id):
+    sql_exp = f'SELECT cli_no FROM planning_lot_quantity ' \
+              f'JOIN order_line USING(orl_id) ' \
+              f'JOIN order_header USING(ord_id) ' \
+              f'JOIN client USING(cli_id) ' \
+              f'WHERE plq_id = {plq_id}'
+    result_set = sql_query(sql_exp, config.sigm_db_cursor)
+    cli_no = scalar_data(result_set)
+    return cli_no
