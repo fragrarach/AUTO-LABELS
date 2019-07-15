@@ -57,12 +57,11 @@ def dynamic_label_handler(config, payload):
 
     # CCETI Report
     elif payload['db_ref_type'] == 'orl_id':
-        orl_id = payload['db_ref']
-        prt_no = orl_id_prt_no(config, orl_id)
-        prt_desc = orl_id_prt_desc(config, orl_id)
+        prt_no = orl_id_prt_no(config, payload['orl_id'])
+        prt_desc = orl_id_prt_desc(config, payload['orl_id'])
 
         if payload['customer'] == 'sirona':
-            plq_note = orl_id_plq_note(config, orl_id)
+            plq_note = orl_id_plq_note(config, payload['orl_id'])
             serial_no_list = serial_no_range(plq_note)
             for serial_no in serial_no_list:
                 mod43 = modulo_43(serial_no)

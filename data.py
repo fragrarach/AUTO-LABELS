@@ -1,18 +1,22 @@
 import re
 from statements import plq_id_plq_qty_per, orl_id_orl_qty_ready
+from quatro import log
 
 
 # Split payload string, return named variables
 def payload_handler(raw_payload):
-    sigm_string = raw_payload.split(', ')[-1]
+    log(raw_payload)
+    split_payload = raw_payload.split(', ')
+    sigm_string = split_payload[-1]
     payload = {
-        'db_ref': raw_payload.split(', ')[0],
-        'db_ref_type': raw_payload.split(', ')[1],
-        'label_type': raw_payload.split(', ')[2],
-        'qty_ref': raw_payload.split(', ')[3],
-        'label_name': raw_payload.split(', ')[4] if raw_payload.split(', ')[2] == 'GENERIC' else '',
+        'db_ref': split_payload[0],
+        'db_ref_type': split_payload[1],
+        'label_type': split_payload[2],
+        'qty_ref': split_payload[3],
+        'label_name': split_payload[4] if split_payload[2] == 'GENERIC' else '',
         'station': re.findall(r'(?<= w)(.*)$', sigm_string)[0]
     }
+    log(repr(payload))
     return payload
 
 
