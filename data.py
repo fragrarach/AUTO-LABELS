@@ -3,18 +3,17 @@ from statements import plq_id_plq_qty_per, orl_id_orl_qty_ready
 
 
 # Split payload string, return named variables
-def payload_handler(payload):
-    db_ref = payload.split(', ')[0]
-    db_ref_type = payload.split(', ')[1]
-    label_type = payload.split(', ')[2]
-    qty_ref = payload.split(', ')[3]
-    label_name = ''
-    if label_type == 'GENERIC':
-        label_name = payload.split(', ')[4]
-    sigm_string = payload.split(', ')[-1]
-    station = re.findall(r'(?<= w)(.*)$', sigm_string)[0]
-
-    return db_ref, db_ref_type, label_type, label_name, qty_ref, station
+def payload_handler(raw_payload):
+    sigm_string = raw_payload.split(', ')[-1]
+    payload = {
+        'db_ref': raw_payload.split(', ')[0],
+        'db_ref_type': raw_payload.split(', ')[1],
+        'label_type': raw_payload.split(', ')[2],
+        'qty_ref': raw_payload.split(', ')[3],
+        'label_name': raw_payload.split(', ')[4] if raw_payload.split(', ')[2] == 'GENERIC' else '',
+        'station': re.findall(r'(?<= w)(.*)$', sigm_string)[0]
+    }
+    return payload
 
 
 # Generate range of serial numbers from 'XXXXX to XXXXX' formatted string
@@ -64,21 +63,21 @@ def modulo_43(string):
 
 
 # Return label quantity based on production/order line quantity, default to 1
-def select_print_qty(config, qty_ref, db_ref_type, ref):
+def select_print_qty(config, payload):
     qty = 1
-    if qty_ref == 'MULTI':
-        if db_ref_type == 'plq_id':
-            plq_id = ref
-            qty = plq_id_plq_qty_per(config, plq_id)
+    if payload['qty_ref'] == 'MULTI':
+        if payload['db_ref_type'] == 'plq_id':
+            qty = plq_id_plq_qty_per(config, payload['plq_id'])
 
-        elif db_ref_type == 'orl_id':
-            orl_id = ref
-            qty = orl_id_orl_qty_ready(config, orl_id)
+        elif payload['db_ref_type'] == 'orl_id':
+            qty = orl_id_orl_qty_ready(config, payload['orl_id'])
     return qty
 
 
-def get_cli_no_customer(config, cli_no):
+def get_cli_no_customer(config, payload):
+    if payload['label_type'] == 'GENERIC':
+        return 'generic'
     for customer in config.CUSTOMERS:
-        if cli_no in config.CUSTOMERS[customer]:
+        if payload['cli_no'] in config.CUSTOMERS[customer]:
             return customer
     return 'generic'

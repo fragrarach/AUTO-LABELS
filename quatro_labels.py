@@ -1,5 +1,5 @@
 from printers import get_dymo_printers
-from quatro import listen
+from quatro import listen, files
 import config
 from tasks import listen_task
 
