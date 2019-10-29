@@ -1,6 +1,6 @@
 import re
 from statements import plq_id_plq_qty_per, orl_id_orl_qty_ready
-from quatro import log
+from quatro import log, configuration as c
 
 
 # Split payload string, return named variables
@@ -67,21 +67,21 @@ def modulo_43(string):
 
 
 # Return label quantity based on production/order line quantity, default to 1
-def select_print_qty(config, payload):
+def select_print_qty(payload):
     qty = 1
     if payload['qty_ref'] == 'MULTI':
         if payload['db_ref_type'] == 'plq_id':
-            qty = plq_id_plq_qty_per(config, payload['plq_id'])
+            qty = plq_id_plq_qty_per(payload['plq_id'])
 
         elif payload['db_ref_type'] == 'orl_id':
-            qty = orl_id_orl_qty_ready(config, payload['orl_id'])
+            qty = orl_id_orl_qty_ready(payload['orl_id'])
     return qty
 
 
-def get_cli_no_customer(config, payload):
+def get_cli_no_customer(payload):
     if payload['label_type'] == 'GENERIC':
         return 'generic'
-    for customer in config.CUSTOMERS:
-        if payload['cli_no'] in config.CUSTOMERS[customer]:
+    for customer in c.config.CUSTOMERS:
+        if payload['cli_no'] in c.config.CUSTOMERS[customer]:
             return customer
     return 'generic'

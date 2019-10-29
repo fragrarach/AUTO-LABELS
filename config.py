@@ -4,8 +4,16 @@ from quatro import sigm_connect
 
 
 class Config:
-    LISTEN_CHANNEL = 'labels'
-    
+    def __init__(self, main_file_path):
+        self.main_file_path = main_file_path
+        self.parent_dir = dirname(abspath(main_file_path))
+        self.sigm_connection = None
+        self.sigm_db_cursor = None
+        self.LISTEN_CHANNEL = 'labels'
+
+    def sql_connections(self):
+        self.sigm_connection, self.sigm_db_cursor = sigm_connect(self.LISTEN_CHANNEL)
+
     # Dymo COM configs
     DYMO_COM = Dispatch('Dymo.DymoAddIn')
     DYMO_LABEL = Dispatch('Dymo.DymoLabels')
@@ -15,7 +23,7 @@ class Config:
 
     STATIONS = {
         'CAD2': {
-            'full computer name': 'CAD2.aerofil.local',
+            'full computer name': 'CAD2',
             'shipping printer name': 'DEV SHIPPING DYMO'
         },
         'SHIPPING03': {
@@ -57,7 +65,7 @@ class Config:
                 'dynamic text': [
                     'prt_no'
                 ],
-                'path': LABEL_DIR + r'\generic\dynamic\CONTROL PANEL.label'
+                'path': LABEL_DIR + r'\generic\dynamic\CONTROL_PANEL.label'
             },
             'UNIT': {
                 'dynamic text': [
@@ -70,7 +78,7 @@ class Config:
                 'dynamic text': [
                     'serial_no'
                 ],
-                'path': LABEL_DIR + r'\generic\dynamic\SERIAL NUMBER.label'
+                'path': LABEL_DIR + r'\generic\dynamic\SERIAL_NUMBER.label'
             },
             'SHIPPING SERIAL NUMBER': {
                 'dynamic text': [
@@ -80,7 +88,7 @@ class Config:
                     'prt_desc',
                     'serial_no'
                 ],
-                'path': LABEL_DIR + r'\generic\dynamic\SHIPPING SERIAL NUMBER.label'
+                'path': LABEL_DIR + r'\generic\dynamic\SHIPPING_SERIAL_NUMBER.label'
             },
             'SHIPPING': {
                 'dynamic text': [
@@ -111,5 +119,4 @@ class Config:
         }
     }
 
-    def __init__(self):
-        self.sigm_connection, self.sigm_db_cursor = sigm_connect(Config.LISTEN_CHANNEL)
+
